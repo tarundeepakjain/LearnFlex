@@ -1,7 +1,20 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link,useNavigate } from "react-router-dom";
+import { signInWithPopup } from "firebase/auth";
+import { auth, provider } from "../firebase";
 
 function Signup(){
+    const navigate = useNavigate();
+    const handleGoogleSignUp = async () => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      console.log("Signed in user:", user);
+      navigate("/dashboard");
+    } catch (err) {
+      console.error("Google Sign-in error:", err);
+    }
+  };
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
@@ -44,6 +57,7 @@ function Signup(){
 
           <div className="mt-6">
           <button
+            onClick={handleGoogleSignUp}
             type="button"
             className="w-full flex items-center justify-center gap-3 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition"
           >
