@@ -1,14 +1,25 @@
-// backend/server.js
-const express = require("express");
-const fetch = require("node-fetch");
-const cors = require("cors");
+const path = require('path');
 
+// Load env variables
+require('dotenv').config();
+
+// External Modules
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+
+// App Initialization
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+const DB_PATH = process.env.MONGO_URI;
 
+// Middlewares
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+const authRoutes = require('./routes/authRoutes');
+app.use('/api/auth', authRoutes);
 // Proxy endpoint for LeetCode GraphQL
 app.post("/api/leetcode", async (req, res) => {
   try {
@@ -32,4 +43,15 @@ app.post("/api/leetcode", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));
+
+// Database Connection & Server Start
+mongoose.connect(DB_PATH)
+  .then(() => {
+    console.log('✅ Connected to Mongo');
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running at http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error('❌ Error connecting to Mongo:', err);
+  });
