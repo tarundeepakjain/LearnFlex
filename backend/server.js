@@ -1,5 +1,5 @@
 const path = require('path');
-
+const fetch = require('node-fetch');
 // Load env variables
 require('dotenv').config();
 
@@ -7,38 +7,43 @@ require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-
+const axios = require('axios');
 // App Initialization
 const app = express();
 const PORT = process.env.PORT || 5000;
 const DB_PATH = process.env.MONGO_URI;
 
 // Middlewares
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173'
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
-// Proxy endpoint for LeetCode GraphQL
+// ✅ LeetCode Proxy Route (Axios-based)
 app.post("/api/leetcode", async (req, res) => {
   try {
     const { query } = req.body;
+    console.log("📥 Received query:", query);
 
-    const response = await fetch("https://leetcode.com/graphql", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36"
-    },
-    body: JSON.stringify({ query }),
-    });
+    const response = await axios.post(
+      "https://leetcode-api-proxy.onrender.com",
+      { query },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "Mozilla/5.0",
+        },
+      }
+    );
 
 
-    const data = await response.json();
-    res.json(data);
+    console.log("📤 Responding with:", response.data);
+    res.json(response.data);
   } catch (err) {
-    console.error("Error in /api/leetcode:", err);
+    console.error("❌ Error in /api/leetcode:", err.message);
     res.status(500).json({ error: "Something went wrong" });
   }
 });

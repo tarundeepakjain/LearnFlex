@@ -46,33 +46,29 @@ function Dashboard() {
 
   const fetchLeetCodeStats = async (username) => {
     try {
-      const query = `
-        query {
-          matchedUser(username: "${username}") {
-            submitStatsGlobal {
-              acSubmissionNum {
-                difficulty
-                count
-              }
-            }
-          }
-        }
-      `;
-      const response = await fetch("http://localhost:5000/api/leetcode", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query }),
-      });
+      const response = await fetch(`https://leetcode-stats-api.herokuapp.com/${username}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch");
+      }
 
       const result = await response.json();
-      const rawStats =
-        result.data?.matchedUser?.submitStatsGlobal?.acSubmissionNum || [];
+      console.log("✅ LeetCode API Response:", result);
+
+      const rawStats = [
+        { difficulty: "Easy", count: result.easySolved },
+        { difficulty: "Medium", count: result.mediumSolved },
+        { difficulty: "Hard", count: result.hardSolved }
+      ];
+
       setLeetcodeStats(rawStats);
     } catch (err) {
-      console.error("Error fetching LeetCode stats:", err);
+      console.error("❌ Error fetching LeetCode stats:", err);
       setError("Failed to load LeetCode data.");
     }
   };
+
+
 
   const handleSaveHandles = async () => {
     if (!leetcodeHandle || !gfgHandle) {
