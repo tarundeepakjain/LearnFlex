@@ -37,8 +37,25 @@ app.post("/api/leetcode", async (req, res) => {
           "User-Agent": "Mozilla/5.0",
         },
       }
-    );
+);
 
+// ✅ GFG Stats API
+app.get("/api/gfg/:username", async (req, res) => {
+  const { username } = req.params;
+  try {
+    const response = await axios.get(`https://auth.geeksforgeeks.org/user/${username}/practice/`);
+    const html = response.data;
+
+    // Very basic regex to extract total solved
+    const match = html.match(/Total Problems Solved.*?(\d+)/);
+    const totalSolved = match ? parseInt(match[1]) : 0;
+
+    res.json({ totalSolved });
+  } catch (err) {
+    console.error("❌ GFG Fetch Error:", err.message);
+    res.status(500).json({ error: "Failed to fetch GFG stats" });
+  }
+});
 
     console.log("📤 Responding with:", response.data);
     res.json(response.data);

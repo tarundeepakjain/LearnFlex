@@ -8,6 +8,8 @@ import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recha
 const COLORS = ["#0088FE", "#00C49F", "#FF8042"];
 
 function Dashboard() {
+  const [gfgStats, setGfgStats] = useState([]);
+  const [gfgError, setGfgError] = useState(null);
   const [user, setUser] = useState(null);
   const [leetcodeHandle, setLeetcodeHandle] = useState("");
   const [gfgHandle, setGfgHandle] = useState("");
@@ -42,7 +44,12 @@ function Dashboard() {
     if (leetcodeHandle) {
       fetchLeetCodeStats(leetcodeHandle);
     }
-  }, [leetcodeHandle]);
+
+    if (gfgHandle) {
+      fetchGfgStats(gfgHandle);
+    }
+  }, [leetcodeHandle, gfgHandle]);
+
 
   const fetchLeetCodeStats = async (username) => {
     try {
@@ -67,6 +74,32 @@ function Dashboard() {
       setError("Failed to load LeetCode data.");
     }
   };
+
+    const fetchGfgStats = async (username) => {
+      try {
+        const url = `https://geeks-for-geeks-stats-api.vercel.app/?raw=y&userName=${username}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Failed to fetch GFG stats.");
+
+        const data = await response.json();
+        console.log("✅ GFG Stats API:", data);
+
+        const statsArr = [
+          { difficulty: "School", count: data.School },
+          { difficulty: "Basic", count: data.Basic },
+          { difficulty: "Easy", count: data.Easy },
+          { difficulty: "Medium", count: data.Medium },
+          { difficulty: "Hard", count: data.Hard },
+        ];
+
+        setGfgStats(statsArr);
+        setGfgError("");
+      } catch (err) {
+        console.error("❌ Error fetching GFG stats:", err);
+        setGfgError("Failed to load GFG data.");
+      }
+    };
+
 
 
 
@@ -166,6 +199,32 @@ function Dashboard() {
           </ResponsiveContainer>
         </div>
       )}
+    {gfgStats.length > 0 && (
+      <div className="mt-10 w-full max-w-xl bg-white p-6 rounded-xl shadow">
+        <h2 className="text-xl font-semibold mb-4">GFG Stats</h2>
+        <ResponsiveContainer width="100%" height={300}>
+          <PieChart>
+            <Pie
+              data={gfgStats}
+              dataKey="count"
+              nameKey="difficulty"
+              cx="50%"
+              cy="50%"
+              outerRadius={100}
+              label
+            >
+              {gfgStats.map((entry, idx) => (
+                <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    )}
+
+
 
       <button
         onClick={handleLogout}
